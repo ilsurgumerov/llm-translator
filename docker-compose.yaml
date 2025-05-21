@@ -1,0 +1,22 @@
+services:
+  cross-celling-api:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    image: backend:latest
+    container_name: backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/app_api.py:/app/app_api.py
+
+  streamlit-web:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    image: frontend:latest
+    container_name: frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend/streamlit_app.py:/app/streamlit_app.py
