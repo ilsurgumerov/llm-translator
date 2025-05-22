@@ -1,5 +1,5 @@
 services:
-  cross-celling-api:
+  backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
@@ -10,7 +10,7 @@ services:
     volumes:
       - ./backend/app_api.py:/app/app_api.py
 
-  streamlit-web:
+  frontend:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile

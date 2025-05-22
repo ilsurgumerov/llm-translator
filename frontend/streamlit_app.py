@@ -2,19 +2,18 @@ import streamlit as st
 import requests
 from requests.exceptions import ConnectionError
 
-# ip_api = "127.0.0.1"
-ip_api = "cross-celling-api" # compose
-port_api = "5000"
-
+# ip_api = "127.0.0.1" # test in python
+ip_api = "backend" # docker compose
+port_api = "5000" 
 
 # Обновленные стили для тёмной темы
 st.markdown("""
     <style>
     :root {
-        --background: #000000; /* чёрный фон */
-        --text: #f1f1f1;        /* светлый текст */
-        --input-bg: #1a1a1a;    /* тёмный фон полей */
-        --placeholder: #888888; /* светло-серый плейсхолдер */
+        --background: #000000;
+        --text: #f1f1f1; 
+        --input-bg: #1a1a1a;  
+        --placeholder: #888888;
     }
 
     /* Цвет текста и плейсхолдера внутри textarea */
@@ -66,33 +65,44 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Инициализация состояния для вывода
 if 'translation_result' not in st.session_state:
     st.session_state.translation_result = ""
 
-st.title("🗺️ Многоязычный переводчик")
+st.title("LLM переводчик")
 
 languages = [
+    "русский",
+    "башкирский",
+    "татарский",
+    "казахский",
     "английский",
     "французский",
     "немецкий",
     "испанский",
     "португальский",
-    "китайский",
-    "японский",
-    "казахский",
-    "башкирский"
+    "норвежский"
 ]
 
 col1, col2 = st.columns([1, 3])
 
 with col1:
-    st.markdown("### Язык")
-    lang = st.selectbox(
-        label="Выберите язык",
+    st.markdown("Перевести из:")
+
+    lang_orig = st.selectbox(
+        label="Исходный язык",
         options=languages,
         index=0,
-        key="lang_select",
+        key="lang_orig",
+        label_visibility="collapsed"
+    )
+
+    st.markdown("Перевести на:")
+
+    lang_target = st.selectbox(
+        label="Язык перевода",
+        options=languages,
+        index=1,
+        key="lang_target",
         label_visibility="collapsed"
     )
 
@@ -113,19 +123,19 @@ with col2:
             try:
                 response = requests.post(
                     f"http://{ip_api}:{port_api}/translate",
-                    json={"text": str(input_text), "language": str(lang)}
+                    json={"text": str(input_text), "lang_orig": str(lang_orig), "lang_target" : str(lang_target)}
                 )
                 
                 if response.status_code == 200:
                     result = response.json()
-                    st.session_state.translation_result = result['original_text'].lower()
+                    st.session_state.translation_result = result["translated_text"]
                 else:
                     st.session_state.translation_result = f"Ошибка ({response.status_code})"
                 
             except ConnectionError:
                 st.error("Ошибка подключения к серверу")
     
-    # Результат
+    # Результат перевода (елси вышла какая либо ошикба, то она выводится в этом поле)
     output_text = st.session_state.get("translation_result", "")
 
     st.text_area(

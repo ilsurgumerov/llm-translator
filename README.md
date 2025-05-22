@@ -1,6 +1,6 @@
 # LLM Translator API & Web App
 
-Этот проект предоставляет REST API и инструменты для перевода текстов с использованием крупных языковых моделей (LLM). Поддерживаются различные модели (OpenAI и другие) с настройкой параметров перевода.
+Этот проект предоставляет REST API и инструменты для перевода текстов с использованием крупных языковых моделей (LLM)..
 
 ---
 
@@ -14,7 +14,6 @@
   - [Docker](#docker)
 - [Формат запроса](#формат-запроса)
 - [Поддерживаемые модели](#поддерживаемые-модели)
-- [Конфигурация](#конфигурация)
 - [Обратная связь](#обратная-связь)
 
 ---
@@ -37,11 +36,15 @@
    ```
 2. Установите зависимости:
     ```bash
-    pip install -r requirements.txt
-    ```
-3. Создайте файл конфигурации
-    ```bash
-    cp config.example.yaml config.yaml
+    # Установка зависимостей
+    pip install -r backend/requirements.txt
+    pip install -r frontend/requirements.txt
+
+    # Запуск backend
+    python backend/app_api.py
+
+    # Запуск frontend
+    streamlit run frontend/streamlit_app.py
     ```
 
 ---
@@ -52,28 +55,21 @@
 
 Запуск сервера:
 ```bash
-python app_api.py
+python backend/app_api.py
 ```
 
-Сервер будет доступен по адресу: http://127.0.0.1:8000
+Сервер будет доступен по адресу: `http://127.0.0.1:5000`.
 
 Доступные эндпоинты:
 - `GET /health`
 - `GET /models`
 - `POST /translate`
 
-Пример запроса:
-```bash
-curl -X POST http://127.0.0.1:8000/translate \
-     -H "Content-Type: application/json" \
-     -d '{"text": "Привет, мир", "source_lang": "ru", "target_lang": "en", "model": "gpt-3.5-turbo"}'
-```
-
 ### Streamlit (Frontend)
 
 Запуск веб-приложения:
 ```bash
-streamlit run web_app.py
+streamlit run frontend/streamlit_app.py
 ```
 
 Веб-интерфейс подключается к API по адресу `http://localhost:8501`.
@@ -82,21 +78,21 @@ streamlit run web_app.py
 
 ### Docker
 
-Для запуска через Docker:
+Для запуска через Docker небходимо поменять хост в коде
 
-Соберите образ:
+Сборка образов:
 
 ```bash
-docker build -t llm-translator .
+docker compose build
 ```
 
 Запустите контейнер:
 
 ```bash
-docker run -p 8000:8000 -p 8501:8501 llm-translator
+docker compose up -d
 ```
 
-API будет доступно на порту 8000, веб-интерфейс на порту 8501.
+API будет доступно на порту 5000, веб-интерфейс на порту 8501.
 
 ---
 
@@ -106,41 +102,24 @@ API будет доступно на порту 8000, веб-интерфейс 
 ```json
 {
   "text": "Текст для перевода",
-  "source_lang": "ru",
-  "target_lang": "en",
-  "model": "gpt-3.5-turbo",
-  "temperature": 0.7,
-  "max_tokens": 1000
+  "lang_orig": "ru",
+  "lang_target": "en"
 }
 ```
 
 ---
 
 ## Поддерживаемые модели
-OpenAI: gpt-3.5-turbo, gpt-4
+google/gemini-2.0-flash-exp:free
+deepseek/deepseek-chat-v3-0324:free    
+qwen/qwen3-235b-a22b:free
+meta-llama/llama-4-maverick:free
 
-Другие модели (см. список через /models)
-
----
-
-## Конфигурация
-
-Создайте config.yaml в корне проекта:
-
-```yaml
-openai:
-  api_key: "your_openai_key"
-anthropic:
-  api_key: "your_anthropic_key"
-default_model: "gpt-3.5-turbo"
-translation_params:
-  temperature: 0.7
-  max_tokens: 2000
-```
+Можно смотреть через /models
 
 ---
 
 ## Обратная связь
 
 Если вы нашли ошибку или у вас есть предложения по улучшению, создайте issue или pull request!
-Вы также можете связаться с командой напрямую: **xxxxx@yandex.ru**
+Вы также можете связаться с командой напрямую: **gumerovilsur1@gmail.com**

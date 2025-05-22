@@ -1,65 +1,140 @@
-'''
-Шаг 1: Установка необходимых библиотек
-Убедитесь, что у вас установлены необходимые библиотеки:
-pip install fastapi uvicorn pydantic scikit-learn pandas
-
-Шаг 2: Создание app_api.py
-Шаг 3: Запустите ваше приложение: python app_api.py
-Шаг 4: Тестирование API
-
-Проверка работы API (/health)
-curl -X GET http://127.0.0.1:5000/health
-curl -X GET http://127.0.0.1:5000/stats
-'''
-
 from fastapi import FastAPI, Request, HTTPException
 import pickle
 import pandas as pd
 from enum import Enum
 from pydantic import BaseModel
+import requests
+import os
+from dotenv import load_dotenv
+from typing import Optional
 
+load_dotenv()
 app = FastAPI()
 
-# Счетчик запросов
-request_count = 0
-
-# Определение доступных языков через Enum
 class Language(str, Enum):
+    russian = "русский"
+    bashkir = "башкирский"
+    tatar = "татарский"
+    kazakh = "казахский"
     english = "английский"
     french = "французский"
     german = "немецкий"
+    spanish = "испанский"
+    portuguese = "португальский"
+    norwegian = "норвежский"
 
-# Модель для входных данных
 class TranslationRequest(BaseModel):
     text: str
-    language: Language
+    lang_orig: Language
+    lang_target: Language
 
+all_LLM_Modles = [
+    "google/gemini-2.0-flash-exp:free",
+    "deepseek/deepseek-chat-v3-0324:free",    
+    "qwen/qwen3-235b-a22b:free",
+    "meta-llama/llama-4-maverick:free"
+    # "deepseek/deepseek-chat" # if you have money
+]
 
-@app.get("/stats")
-def stats():
-    return {"request_count": request_count}
+def translate_text(
+    text: str,
+    orig_lang: Language,
+    target_lang: Language,
+    llm_model: str = "google/gemini-2.0-flash-exp:free",
+    llm_key: Optional[str] = None,
+) -> (str, bool):
+    """
+    Переводит текст между языками через OpenRouter API (используя `requests`).
+
+    Параметры:
+        text (str): Текст для перевода.
+        orig_lang (Language): Исходный язык.
+        target_lang (Language): Целевой язык.
+        llm_model (str): Модель LLM (по умолчанию: deepseek-v3).
+        llm_key (str, optional): API-ключ OpenRouter. Если None, берётся из переменной окружения.
+
+    Возвращает:
+        str: Переведённый текст или сообщение об ошибке.
+        bool: False - ошибка, True - перевод сделан. 
+    """
+    
+    if not llm_key:
+        llm_key = os.getenv("OPENROUTER_API_KEY")
+    if not llm_key:
+        return "Ошибка: Не указан API-ключ OpenRouter.", False
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    
+    headers = {
+        "Authorization": f"Bearer {llm_key}",
+        "HTTP-Referer": "http://localhost:8501", 
+        "X-Title": "LLM Translator",
+    }
+
+    translation_prompt = f"""
+        Strictly translate this {orig_lang} text to {target_lang}.
+        Rules:
+        1. Output ONLY the translation, NOTHING else
+        2. Preserve original meaning 100%
+        3. Keep names/terms unchanged
+        4. For slang/idioms use closest natural equivalent
+        5. Maintain original formatting (quotes, line breaks etc.)
+        
+        Text to translate:
+        {text}
+    """
+
+    data = {
+        "model": llm_model,
+        "messages": [{"role": "user", "content": translation_prompt}],
+        "temperature": 0.1,
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        response.raise_for_status() 
+
+        result = response.json()
+        translated_text = result["choices"][0]["message"]["content"].strip()
+
+        return str(translated_text), True
+
+    except requests.exceptions.RequestException as e:
+        return f"Ошибка сети: {str(e)}", False
+    
+    except (KeyError, IndexError) as e:
+        return f"Ошибка обработки ответа API: {str(e)}", False
+
 
 @app.get("/health")
 def health():
     return {"status": "OK"}
 
+@app.get("/models")
+def get_models():
+    return {"models list": all_LLM_Modles}
 
 @app.post("/translate")
 def translate(request: TranslationRequest):
-    global request_count
-    request_count += 1
+
+    llm_api_key = os.getenv("OPENROUTER_API_KEY")
+
+    text_orig = request.text
+    lang_orig = request.lang_orig
+    lang_target = request.lang_target
+
+    if (lang_orig == lang_target):
+        return { "translated_text": text_orig }
     
-    text = request.text.lower()
-    lang = request.language.value
-    
-    return {
-        "original_text": text,
-        "translation": request.text,
-        "language": lang,
-        "found": True
-    }
+    for llm_model in all_LLM_Modles:
+        text_target, status = translate_text(text_orig, lang_orig, lang_target, llm_model, llm_api_key)
+
+        if status:
+            return { "translated_text": text_target }
+        
+    return { "translated_text": "Uuups" }
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
-    # uvicorn.run(app, host="127.0.0.1", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=5000) # docker compose 
+    # uvicorn.run(app, host="127.0.0.1", port=5000) # test in python
