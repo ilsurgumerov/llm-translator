@@ -6,6 +6,7 @@
 
 ## Содержание
 
+- [Пример перевода](#пример-перевода)
 - [Функционал](#функционал)
 - [Установка](#установка)
 - [Запуск](#запуск)
@@ -15,6 +16,12 @@
 - [Формат запроса](#формат-запроса)
 - [Поддерживаемые модели](#поддерживаемые-модели)
 - [Обратная связь](#обратная-связь)
+
+---
+
+## Пример перевода
+
+![5d59923b-24de-486c-90a3-8042d734c0de](https://github.com/user-attachments/assets/1b71940e-c652-4131-a4e6-ea702eb817d3)
 
 ---
 
@@ -110,10 +117,10 @@ API будет доступно на порту 5000, веб-интерфейс 
 ---
 
 ## Поддерживаемые модели
-google/gemini-2.0-flash-exp:free
-deepseek/deepseek-chat-v3-0324:free    
-qwen/qwen3-235b-a22b:free
-meta-llama/llama-4-maverick:free
+- google/gemini-2.0-flash-exp:free
+- deepseek/deepseek-chat-v3-0324:free    
+- qwen/qwen3-235b-a22b:free
+- meta-llama/llama-4-maverick:free
 
 Можно смотреть через /models
 
