@@ -9,6 +9,8 @@ services:
       - "5000:5000"
     volumes:
       - ./backend/app_api.py:/app/app_api.py
+    env_file:
+      - .env  # подключаем файл с переменными среды
 
   frontend:
     build:

@@ -66,9 +66,7 @@ def translate_text(
     url = "https://openrouter.ai/api/v1/chat/completions"
     
     headers = {
-        "Authorization": f"Bearer {llm_key}",
-        "HTTP-Referer": "http://localhost:8501", 
-        "X-Title": "LLM Translator",
+        "Authorization": f"Bearer {llm_key}"
     }
 
     translation_prompt = f"""
@@ -129,10 +127,12 @@ def translate(request: TranslationRequest):
     for llm_model in all_LLM_Modles:
         text_target, status = translate_text(text_orig, lang_orig, lang_target, llm_model, llm_api_key)
 
+        print(text_target)
+
         if status:
             return { "translated_text": text_target }
         
-    return { "translated_text": "Uuups" }
+    return { "translated_text": "Uups"}
 
 if __name__ == '__main__':
     import uvicorn
